@@ -1,4 +1,4 @@
-###CrossJoin-AESO Discord Bot
+###CrossJoin-AESO Discord Bot###
 
 Prelude:
 This is my first experience using both the discord.py library to make a basic discord app as well as my first time utilizing the AESO API. In essence what it currently does is let you say !CrossJoin then type a command and sometimes extension to run a command that the bot uses to call the API and process it into usable information.
