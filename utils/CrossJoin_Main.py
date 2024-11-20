@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 import discord
 from discord.ext import tasks
 import CrossJoin_Support as Support
-import CrossJoin_Sys as Sys
+from static import CrossJoin_Sys as Sys
 
 
 # Discord bot itself

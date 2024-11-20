@@ -35,8 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 import discord
 import structlog as sl
-import CrossJoin_Sys as Sys
-import CrossJoin_CommandLogic as CommandLogic
+from static import CrossJoin_Sys as Sys, CrossJoin_CommandLogic as CommandLogic
 from dotenv import load_dotenv
 
 load_dotenv()

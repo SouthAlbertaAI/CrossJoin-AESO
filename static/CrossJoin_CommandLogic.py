@@ -38,7 +38,7 @@ import datetime as dt
 import structlog as sl
 import json
 import discord
-import CrossJoin_Sys as Sys
+from static import CrossJoin_Sys as Sys
 import re
 from dotenv import load_dotenv
 import os
