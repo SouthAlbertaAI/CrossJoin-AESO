@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 """
 
 import discord
-from CrossJoin_Main import CrossJoin
+from utils.CrossJoin_Main import CrossJoin
 from dotenv import load_dotenv
 import os
 
