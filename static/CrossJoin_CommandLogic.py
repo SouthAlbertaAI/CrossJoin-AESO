@@ -39,9 +39,11 @@ import structlog as sl
 import json
 import discord
 from static import CrossJoin_Sys as Sys
+from utils import CrossJoin_Visuals as Vis
 import re
 from dotenv import load_dotenv
 import os
+from textwrap import dedent
 
 
 load_dotenv()
@@ -154,7 +156,16 @@ def CapacityBasic():
         return Sys.ErrorMessage_Basic(str(e))
 
 
-def SourcesBasic():
+def SourcesBasic(user_input: str = None):
+    flag = 0
+    if "-" in user_input:
+        extraction = re.search(r"\--(.*)", user_input)
+        if extraction is not None:
+            extraction = extraction.group(1)
+            extraction = extraction.strip("-")
+            extraction = str(extraction)
+            if extraction == "visual":
+                flag = 1
     try:
         headers = {
             "X-API-Key": os.getenv("API_KEY"),
@@ -164,35 +175,55 @@ def SourcesBasic():
             headers=headers)
         return_text = json.loads(return_text.content)
 
+        data_main = []
+        data_main_2 = ["gas", "stored", "other", "hydro", "solar", "wind"]
+
         gas_true = 0
+        gas_overtime = []
+
         stored_true = 0
+        stored_overtime = []
+
         other_true = 0
+        other_overtime = []
+
         hydro_true = 0
+        hydro_overtime = []
+
         solar_true = 0
+        solar_overtime = []
+
         wind_true = 0
+        wind_overtime = []
         for z in return_text["return"]["asset_list"]:
             match z["fuel_type"].lower():
                 case "gas":
                     gas_true += float(z["net_generation"])
                     gas_true += float(z["dispatched_contingency_reserve"])
+                    gas_overtime.append(float(z["net_generation"]))
                 case "energy storage":
                     stored_true += float(z["net_generation"])
                     stored_true += float(z["dispatched_contingency_reserve"])
+                    stored_overtime.append(float(z["net_generation"]))
                 case "other":
                     other_true += float(z["net_generation"])
                     other_true += float(z["dispatched_contingency_reserve"])
+                    other_overtime.append(float(z["net_generation"]))
                 case "hydro":
                     hydro_true += float(z["net_generation"])
                     hydro_true += float(z["dispatched_contingency_reserve"])
+                    hydro_overtime.append(float(z["net_generation"]))
                 case "solar":
                     solar_true += float(z["net_generation"])
                     solar_true += float(z["dispatched_contingency_reserve"])
+                    solar_overtime.append(float(z["net_generation"]))
                 case "wind":
                     wind_true += float(z["net_generation"])
                     wind_true += float(z["dispatched_contingency_reserve"])
+                    wind_overtime.append(float(z["net_generation"]))
         main_return = discord.Embed(
             colour=discord.Color.gold(),
-            title=f"Current Alberta Power Types Usage(Over 5 Megawatts)",
+            title=f"Current Alberta Power Types Usage (Over 5 Megawatts)",
             description=f"""
             Gas Currently Used: {gas_true} Megawatts\n\n
             Other Fuel Types Currently Used: {other_true} Megawatts\n\n
@@ -204,6 +235,18 @@ def SourcesBasic():
             type="rich",
             timestamp=dt.datetime.now()
         )
+
+        if flag == 1:
+            data_main.append(gas_overtime)
+            data_main.append(stored_overtime)
+            data_main.append(other_overtime)
+            data_main.append(hydro_overtime)
+            data_main.append(solar_overtime)
+            data_main.append(wind_overtime)
+
+            Vis.GraphSources("Power Producing Assets", "Power Produced By Asset",
+                             data_main, data_main_2)
+            main_return.set_image(url="attachment://CacheFile.png")
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
@@ -230,3 +273,24 @@ def GetChannelId(user_input: str, client: discord.Client):
         return Sys.ErrorMessage_Basic(str(e))
 
 
+def SendHelp(user_input: str):
+    try:
+        cmdPrefix = "!CrossJoin"
+        main_return = discord.Embed(
+            colour=discord.Color.gold(),
+            title=f"CrossJoin Command Syntax",
+            description=dedent(f"""
+            - `{cmdPrefix} average` - Shows the average price over a specified amount of days.
+            - `{cmdPrefix} capacity` - Shows stats about capacity and load of Alberta's power grid.
+            - `{cmdPrefix} sources` - Search a source for information.
+            - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
+            - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
+            - `{cmdPrefix} help` - Shows this message.
+            """),
+            type="rich",
+            timestamp=dt.datetime.now()
+        )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Basic(str(e))
