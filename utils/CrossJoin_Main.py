@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 import discord
 from discord.ext import tasks
-import CrossJoin_Support as Support
+import utils.CrossJoin_Support as Support
 from static import CrossJoin_Sys as Sys
 
 
@@ -52,19 +52,24 @@ class CrossJoin(discord.Client):
         print(f"Logged On As {self.user} with ID {self.user.id}")
         print("------------------------------------------------------")
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         if message.author.id == self.user.id:
             return
 
         if message.content.startswith("!CrossJoin"):
             try:
-                await message.reply(mention_author=True, embed=Support.HotInfer(message.content, self))
+                Response = Support.HotInfer(message.content, self)
+                if Response.image.url is not None:
+                    await message.reply(mention_author=True, embed=Response,
+                                        file=discord.File(Response.image.url.strip("attachment://")))
+                else:
+                    await message.reply(mention_author=True, embed=Response)
             except Exception as e:
                 print(e)
                 await message.reply(embed=Sys.ErrorMessage_Basic("Fatal Error Occurred"),
                                     mention_author=True)
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(hours=2)
     async def scheduled_capacity_check(self):
         if self.channel_main is not None:
             sender = self.get_channel(self.channel_main)
