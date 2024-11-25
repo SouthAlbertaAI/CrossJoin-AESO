@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
+# For sources
 def GraphSources(XAxisName: str, YAxisName: str, Data: list, Data2: list):
     fig, ax = plt.subplots()
     Count = 0
