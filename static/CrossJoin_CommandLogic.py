@@ -43,6 +43,7 @@ from utils import CrossJoin_Visuals as Vis
 import re
 from dotenv import load_dotenv
 import os
+from textwrap import dedent
 
 
 load_dotenv()
@@ -222,7 +223,7 @@ def SourcesBasic(user_input: str = None):
                     wind_overtime.append(float(z["net_generation"]))
         main_return = discord.Embed(
             colour=discord.Color.gold(),
-            title=f"Current Alberta Power Types Usage(Over 5 Megawatts)",
+            title=f"Current Alberta Power Types Usage (Over 5 Megawatts)",
             description=f"""
             Gas Currently Used: {gas_true} Megawatts\n\n
             Other Fuel Types Currently Used: {other_true} Megawatts\n\n
@@ -272,3 +273,24 @@ def GetChannelId(user_input: str, client: discord.Client):
         return Sys.ErrorMessage_Basic(str(e))
 
 
+def SendHelp(user_input: str):
+    try:
+        cmdPrefix = "!CrossJoin"
+        main_return = discord.Embed(
+            colour=discord.Color.gold(),
+            title=f"CrossJoin Command Syntax",
+            description=dedent(f"""
+            - `{cmdPrefix} average` - Shows the average price over a specified amount of days.
+            - `{cmdPrefix} capacity` - Shows stats about capacity and load of Alberta's power grid.
+            - `{cmdPrefix} sources` - Search a source for information.
+            - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
+            - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
+            - `{cmdPrefix} help` - Shows this message.
+            """),
+            type="rich",
+            timestamp=dt.datetime.now()
+        )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Basic(str(e))

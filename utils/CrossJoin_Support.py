@@ -60,6 +60,9 @@ def HotInfer(user_input: str, client: discord.Client = None):
     elif "set-channel" in user_input.lower():
         Log.info("Set-Channel command triggered")
         return CommandLogic.GetChannelId(user_input, client)
+    elif "help" in user_input.lower():
+        Log.info("Help command triggered")
+        return CommandLogic.SendHelp(user_input)
     else:
-        Log.info("Invalid command sent")
-        return Sys.ErrorMessage_Basic("Not A Command.")
+        Log.info(f"Invalid command sent ({user_input}).")
+        return Sys.ErrorMessage_Basic("Not A Command.\n(See command list with `!CrossJoin help`).")
