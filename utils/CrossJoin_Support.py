@@ -53,7 +53,7 @@ def HotInfer(user_input: str, client: discord.Client = None):
         return CommandLogic.CapacityBasic()
     elif "sources" in user_input.lower():
         Log.info("Sources command triggered")
-        return CommandLogic.SourcesBasic()
+        return CommandLogic.SourcesBasic(user_input)
     elif "check-safe" in user_input.lower():
         Log.info("Check-Safe command triggered")
         return CommandLogic.CheckCapacityOverage()
