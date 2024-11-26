@@ -50,7 +50,7 @@ Log = sl.get_logger()
 def CheckCapacityOverage():
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",

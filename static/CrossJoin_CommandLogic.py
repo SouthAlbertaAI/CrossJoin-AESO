@@ -1,37 +1,36 @@
-"""
-The Clear BSD License
 
-Copyright (c) 2024 SouthAlbertaAI
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted (subject to the limitations in the disclaimer
-below) provided that the following conditions are met:
-
-     * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
-
-     * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-
-     * Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived from this
-     software without specific prior written permission.
-
-NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-"""
+# The Clear BSD License
+# 
+# Copyright (c) 2024 SouthAlbertaAI
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted (subject to the limitations in the disclaimer
+# below) provided that the following conditions are met:
+# 
+#      * Redistributions of source code must retain the above copyright notice,
+#      this list of conditions and the following disclaimer.
+# 
+#      * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+# 
+#      * Neither the name of the copyright holder nor the names of its
+#      contributors may be used to endorse or promote products derived from this
+#      software without specific prior written permission.
+# 
+# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+# THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 import requests as r
 import datetime as dt
@@ -55,7 +54,7 @@ log = sl.get_logger()
 def CheckCapacityOverage():
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",
@@ -97,7 +96,7 @@ def AveragePriceBasic(user_input: str):
             previous_date_default = current_date - dt.timedelta(days=int(re.search(r"\d+",
                                                                                    extraction).group(0)))
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1.1/price/poolPrice?startDate={previous_date_default}&endDate={current_date}",
@@ -133,7 +132,7 @@ def AveragePriceBasic(user_input: str):
 def CapacityBasic():
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",
@@ -168,7 +167,7 @@ def SourcesBasic(user_input: str = None):
                 flag = 1
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/generation/assets/current",
@@ -273,6 +272,65 @@ def GetChannelId(user_input: str, client: discord.Client):
         return Sys.ErrorMessage_Basic(str(e))
 
 
+def GetCams(user_input: str):
+    try:
+        if len(user_input.split()) < 3:
+                main_return = discord.Embed(
+                    colour = 0x00eaff,
+                    title = f"511 Alberta",
+                    description = dedent('''
+                    You need to provide a search term. 
+                    Please ensure this is wrapped in double quotes (").
+                    Example: `!CrossJoin cams "Nose Hill Drive NW"`.
+                    '''),
+                    type = "rich",
+                    timestamp = dt.datetime.now()
+                )
+        else:
+            userSearch = user_input.split('"')[1]
+            headers = {
+                "content-type": "application/json"
+            }
+            return_text = r.get (
+                "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
+                headers=headers
+            )
+            return_text = json.loads(return_text.content)
+            i = 0
+            while i != len(return_text):
+                if userSearch.lower() in return_text[i]["Name"].lower():
+                    x = return_text[i]
+                    main_return = discord.Embed(
+                        colour = 0x00eaff,
+                        title = f"511 Alberta > {x['Name']}",
+                        description = dedent(f"""
+                        {x['Description']}.
+                        - Air Temperature: {x['AirTemperature']}.
+                        - Wind Speed: {x['WindSpeed']} {x['WindDirection']}.
+                        -# Weather Updated @ {x['WeatherUpdated']}.
+                        """),
+                        type = "rich",
+                        timestamp = dt.datetime.now()
+                    )
+                    main_return.set_image(url = x["Url"].replace(" ", "%20"))
+                    break
+                i += 1
+            else:
+                main_return = discord.Embed(
+                    colour = 0x00eaff,
+                    title = f"511 Alberta > {userSearch}",
+                    description = dedent("""
+                    The search yielded no results.
+                    """),
+                    type = "rich",
+                    timestamp = dt.datetime.now()
+                )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Basic(str(e))
+
+
 def SendHelp(user_input: str):
     try:
         cmdPrefix = "!CrossJoin"
@@ -285,7 +343,9 @@ def SendHelp(user_input: str):
             - `{cmdPrefix} sources` - Search a source for information.
             - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
             - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
+            - `{cmdPrefix} cams` - Gets camera and general info from [Alberta 511](https://511.alberta.ca).
             - `{cmdPrefix} help` - Shows this message.
+            -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
             type="rich",
             timestamp=dt.datetime.now()
