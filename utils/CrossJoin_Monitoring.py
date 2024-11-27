@@ -72,4 +72,4 @@ def CheckCapacityOverage():
         return main_return
     except Exception as e:
         Log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return cjs.ErrorMessage_Basic(str(e))
+        return cjs.ErrorMessage_Command(str(e))
