@@ -1,3 +1,4 @@
+
 """
 The Clear BSD License
 
@@ -59,14 +60,14 @@ class CrossJoin(discord.Client):
         if message.content.startswith("!CrossJoin"):
             try:
                 Response = Support.HotInfer(message.content, self)
-                if Response.image.url is not None:
+                if Response.image.url is not None and Response.image.url.split(":")[0] == "attachment":
                     await message.reply(mention_author=True, embed=Response,
                                         file=discord.File(Response.image.url.strip("attachment://")))
                 else:
                     await message.reply(mention_author=True, embed=Response)
             except Exception as e:
                 print(e)
-                await message.reply(embed=Sys.ErrorMessage_Basic("Fatal Error Occurred"),
+                await message.reply(embed=Sys.ErrorMessage_Command("Fatal Error Occurred"),
                                     mention_author=True)
 
     @tasks.loop(hours=2)
