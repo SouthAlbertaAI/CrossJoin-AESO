@@ -1,3 +1,4 @@
+
 """
 The Clear BSD License
 
@@ -65,7 +66,7 @@ def CheckCapacityOverage(user_input: str = None):
                 flag = 1
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",
@@ -91,7 +92,7 @@ def CheckCapacityOverage(user_input: str = None):
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
+        return Sys.ErrorMessage_Command(str(e))
 
 
 def AveragePriceBasic(user_input: str):
@@ -111,7 +112,7 @@ def AveragePriceBasic(user_input: str):
             previous_date_default = current_date - dt.timedelta(days=int(re.search(r"\d+",
                                                                                    extraction).group(0)))
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1.1/price/poolPrice?startDate={previous_date_default}&endDate={current_date}",
@@ -141,13 +142,13 @@ def AveragePriceBasic(user_input: str):
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
+        return Sys.ErrorMessage_Command(str(e))
 
 
 def CapacityBasic():
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",
@@ -167,7 +168,7 @@ def CapacityBasic():
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
+        return Sys.ErrorMessage_Command(str(e))
 
 
 def SourcesBasic(user_input: str = None):
@@ -182,7 +183,7 @@ def SourcesBasic(user_input: str = None):
                 flag = 1
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/generation/assets/current",
@@ -264,7 +265,7 @@ def SourcesBasic(user_input: str = None):
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
+        return Sys.ErrorMessage_Command(str(e))
 
 
 def GetChannelId(user_input: str, client: discord.Client):
@@ -284,7 +285,66 @@ def GetChannelId(user_input: str, client: discord.Client):
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
+        return Sys.ErrorMessage_Command(str(e))
+
+
+def GetCams(user_input: str):
+    try:
+        if len(user_input.split()) < 3:
+                main_return = discord.Embed(
+                    colour = 0x00eaff,
+                    title = f"511 Alberta",
+                    description = dedent('''
+                    You need to provide a search term. 
+                    Please ensure this is wrapped in double quotes (").
+                    Example: `!CrossJoin cams "Nose Hill Drive NW"`.
+                    '''),
+                    type = "rich",
+                    timestamp = dt.datetime.now()
+                )
+        else:
+            userSearch = user_input.split('"')[1]
+            headers = {
+                "content-type": "application/json"
+            }
+            return_text = r.get (
+                "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
+                headers=headers
+            )
+            return_text = json.loads(return_text.content)
+            i = 0
+            while i != len(return_text):
+                if userSearch.lower() in return_text[i]["Name"].lower():
+                    x = return_text[i]
+                    main_return = discord.Embed(
+                        colour = 0x00eaff,
+                        title = f"511 Alberta > {x['Name']}",
+                        description = dedent(f"""
+                        {x['Description']}.
+                        - Air Temperature: {x['AirTemperature']}.
+                        - Wind Speed: {x['WindSpeed']} {x['WindDirection']}.
+                        -# Weather Updated @ {x['WeatherUpdated']}.
+                        """),
+                        type = "rich",
+                        timestamp = dt.datetime.now()
+                    )
+                    main_return.set_image(url = x["Url"].replace(" ", "%20"))
+                    break
+                i += 1
+            else:
+                main_return = discord.Embed(
+                    colour = 0x00eaff,
+                    title = f"511 Alberta > {userSearch}",
+                    description = dedent("""
+                    The search yielded no results.
+                    """),
+                    type = "rich",
+                    timestamp = dt.datetime.now()
+                )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Command(str(e))
 
 
 def SendHelp(user_input: str):
@@ -299,7 +359,9 @@ def SendHelp(user_input: str):
             - `{cmdPrefix} sources` - Search a source for information.
             - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
             - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
+            - `{cmdPrefix} cams` - Gets camera and general info from [Alberta 511](https://511.alberta.ca).
             - `{cmdPrefix} help` - Shows this message.
+            -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
             type="rich",
             timestamp=dt.datetime.now()
@@ -307,7 +369,4 @@ def SendHelp(user_input: str):
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return Sys.ErrorMessage_Basic(str(e))
-
-
-CapacityBasic()
+        return Sys.ErrorMessage_Command(str(e))

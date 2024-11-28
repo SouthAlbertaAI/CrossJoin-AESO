@@ -1,3 +1,4 @@
+
 """
 The Clear BSD License
 
@@ -37,9 +38,9 @@ import discord
 import datetime as dt
 
 
-def ErrorMessage_Basic(Error: str) -> discord.Embed:
+def ErrorMessage_Command(Error: str) -> discord.Embed:
     ReturnMain = discord.Embed(
-        title="ERROR OCCURRED IN PROCESSING",
+        title=":warning: Error occurred during command processing!",
         description=f"Reason: {Error}",
         colour=discord.Colour.red(),
         timestamp=dt.datetime.now()

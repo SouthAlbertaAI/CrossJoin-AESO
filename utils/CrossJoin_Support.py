@@ -1,3 +1,4 @@
+
 """
 The Clear BSD License
 
@@ -45,24 +46,28 @@ Log = sl.get_logger()
 
 # Dispatch
 def HotInfer(user_input: str, client: discord.Client = None):
-    if "average" in user_input.lower():
-        Log.info("Average command triggered")
-        return CommandLogic.AveragePriceBasic(user_input)
-    elif "capacity" in user_input.lower():
-        Log.info("Capacity command triggered")
-        return CommandLogic.CapacityBasic()
-    elif "sources" in user_input.lower():
-        Log.info("Sources command triggered")
-        return CommandLogic.SourcesBasic(user_input)
-    elif "check-safe" in user_input.lower():
-        Log.info("Check-Safe command triggered")
-        return CommandLogic.CheckCapacityOverage(user_input)
-    elif "set-channel" in user_input.lower():
-        Log.info("Set-Channel command triggered")
-        return CommandLogic.GetChannelId(user_input, client)
-    elif "help" in user_input.lower():
-        Log.info("Help command triggered")
-        return CommandLogic.SendHelp(user_input)
-    else:
-        Log.info(f"Invalid command sent ({user_input}).")
-        return Sys.ErrorMessage_Basic("Not A Command.\n(See command list with `!CrossJoin help`).")
+    match user_input.split()[1].lower():
+        case "average":
+            Log.info("Average command triggered")
+            return CommandLogic.AveragePriceBasic(user_input)
+        case "capacity":
+            Log.info("Capacity command triggered")
+            return CommandLogic.CapacityBasic()
+        case "sources":
+            Log.info("Sources command triggered")
+            return CommandLogic.SourcesBasic(user_input)
+        case "check-safe":
+            Log.info("Check-Safe command triggered")
+            return CommandLogic.CheckCapacityOverage()
+        case "set-channel":
+            Log.info("Set-Channel command triggered")
+            return CommandLogic.GetChannelId(user_input, client)
+        case "cams":
+            Log.info("Camera command triggered")
+            return CommandLogic.GetCams(user_input)
+        case "help":
+            Log.info("Help command triggered")
+            return CommandLogic.SendHelp(user_input)
+        case _:
+            Log.info(f"Invalid command sent ({user_input}).")
+            return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")

@@ -50,7 +50,7 @@ Log = sl.get_logger()
 def CheckCapacityOverage():
     try:
         headers = {
-            "X-API-Key": os.getenv("API_KEY"),
+            "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
         return_text = r.get(
             f"https://api.aeso.ca/report/v1/csd/summary/current",
@@ -72,4 +72,4 @@ def CheckCapacityOverage():
         return main_return
     except Exception as e:
         Log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
-        return cjs.ErrorMessage_Basic(str(e))
+        return cjs.ErrorMessage_Command(str(e))
