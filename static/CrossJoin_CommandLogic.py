@@ -52,7 +52,17 @@ log = sl.get_logger()
 
 
 # Commands are all managed here
-def CheckCapacityOverage():
+def CheckCapacityOverage(user_input: str = None):
+    flag = 0
+    if "-" in user_input:
+        extraction = re.search(r"\--(.*)", user_input)
+        if extraction is not None:
+            flag = 1
+            extraction = extraction.group(0)
+            extraction = extraction.strip("-")
+            extraction = str(extraction)
+            if extraction == "visual":
+                flag = 1
     try:
         headers = {
             "X-API-Key": os.getenv("API_KEY"),
@@ -74,6 +84,10 @@ def CheckCapacityOverage():
             type="rich",
             timestamp=dt.datetime.now()
         )
+        if flag == 1:
+            Vis.GraphReference(int(return_text["return"]["alberta_internal_load"]),
+                               int(return_text["return"]["total_max_generation_capability"]))
+        main_return.set_image(url="attachment://CacheFile.png")
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
@@ -294,3 +308,6 @@ def SendHelp(user_input: str):
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
         return Sys.ErrorMessage_Basic(str(e))
+
+
+CapacityBasic()

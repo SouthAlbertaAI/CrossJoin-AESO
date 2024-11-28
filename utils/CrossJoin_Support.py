@@ -56,7 +56,7 @@ def HotInfer(user_input: str, client: discord.Client = None):
         return CommandLogic.SourcesBasic(user_input)
     elif "check-safe" in user_input.lower():
         Log.info("Check-Safe command triggered")
-        return CommandLogic.CheckCapacityOverage()
+        return CommandLogic.CheckCapacityOverage(user_input)
     elif "set-channel" in user_input.lower():
         Log.info("Set-Channel command triggered")
         return CommandLogic.GetChannelId(user_input, client)
