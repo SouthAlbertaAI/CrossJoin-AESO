@@ -45,6 +45,7 @@ import re
 from dotenv import load_dotenv
 import os
 from textwrap import dedent
+import shlex 
 
 
 load_dotenv()
@@ -192,10 +193,6 @@ def SourcesBasic(user_input: str = None):
 
         data_main = []
         data_main_2 = ["gas", "stored", "other", "hydro", "solar", "wind"]
-
-        gas_true = 0
-        gas_overtime = []
-
         stored_true = 0
         stored_overtime = []
 
@@ -304,6 +301,7 @@ def GetCams(user_input: str):
                 )
         else:
             userSearch = user_input.split('"')[1]
+            userSplitWSearch = shlex.split(user_input)
             headers = {
                 "content-type": "application/json"
             }
@@ -314,21 +312,31 @@ def GetCams(user_input: str):
             return_text = json.loads(return_text.content)
             i = 0
             while i != len(return_text):
-                if userSearch.lower() in return_text[i]["Name"].lower():
+                if userSearch.lower() in return_text[i]["Location"].lower():
                     x = return_text[i]
+                    t = str(dt.datetime.now())
+                    for i in [':', ' ', '.', '-']:
+                        t = t.replace(i, "")
+                    if len(userSplitWSearch) < 4  or int(userSplitWSearch[3]) < 1:
+                        cameraNum = 0
+                    elif int(userSplitWSearch[3]) > len(x['Views']):
+                        cameraNum = len(x["Views"]) - 1
+                    else:
+                        cameraNum = int(userSplitWSearch[3]) - 1
                     main_return = discord.Embed(
                         colour = 0x00eaff,
-                        title = f"511 Alberta > {x['Name']}",
+                        title = f"511 Alberta > {x['Location']}",
                         description = dedent(f"""
-                        {x['Description']}.
-                        - Air Temperature: {x['AirTemperature']}.
-                        - Wind Speed: {x['WindSpeed']} {x['WindDirection']}.
-                        -# Weather Updated @ {x['WeatherUpdated']}.
+                        {x['Views'][cameraNum]['Description']}.
+                        - Direction: {x['Direction']}.
+                        - Position: {x['Latitude']}, {x['Longitude']}.
+                        -# This location has {len(x['Views'])} camera(s). 
+                        -# Specify a specific camera with `!CrossJoin cams [1-{len(x['Views'])}]`.
                         """),
                         type = "rich",
                         timestamp = dt.datetime.now()
                     )
-                    main_return.set_image(url = x["Url"].replace(" ", "%20"))
+                    main_return.set_image(url = x['Views'][cameraNum]["Url"].replace(" ", "%20") + f"?t={t}")
                     break
                 i += 1
             else:
@@ -359,7 +367,7 @@ def SendHelp(user_input: str):
             - `{cmdPrefix} sources` - Search a source for information.
             - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
             - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
-            - `{cmdPrefix} cams` - Gets camera and general info from [Alberta 511](https://511.alberta.ca).
+            - `{cmdPrefix} cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
             - `{cmdPrefix} help` - Shows this message.
             -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
