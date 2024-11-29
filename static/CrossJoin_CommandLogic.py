@@ -193,6 +193,10 @@ def SourcesBasic(user_input: str = None):
 
         data_main = []
         data_main_2 = ["gas", "stored", "other", "hydro", "solar", "wind"]
+
+        gas_true = 0
+        gas_overtime = []
+        
         stored_true = 0
         stored_overtime = []
 
