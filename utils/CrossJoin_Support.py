@@ -71,6 +71,3 @@ def HotInfer(user_input: str, client: discord.Client = None):
         case _:
             Log.info(f"Invalid command sent ({user_input}).")
             return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")
-
-
-HotInfer("""!CrossJoin cams "Medicine Hat" 3""")
