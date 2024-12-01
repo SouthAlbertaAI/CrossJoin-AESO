@@ -45,6 +45,7 @@ class CrossJoin(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.channel_main = None
+        self.alert_mode = False
 
     async def setup_hook(self) -> None:
         self.scheduled_capacity_check.start()
@@ -76,7 +77,14 @@ class CrossJoin(discord.Client):
             sender = self.get_channel(self.channel_main)
             Output = Support.HotInfer("check-safe")
             Output.description += "\nNotice: This Is A Scheduled Run"
+            # Check to see if alert mode should be triggered
+            if "Alert Mode Triggered: True" in Output.description:
+                self.alert_mode = True
             await sender.send(embed=Output)
+
+    @tasks.loop(minutes=30)
+    async def alert_mode_on(self):
+        print("Skeleton For Now")
 
     @scheduled_capacity_check.before_loop
     async def before_scheduled_capacity_check(self):
