@@ -56,10 +56,9 @@ log = sl.get_logger()
 # Commands are all managed here
 def CheckCapacityOverage(user_input: str = None):
     flag = 0
-    if "-" in user_input:
+    if "--" in user_input:
         extraction = re.search(r"\--(.*)", user_input)
         if extraction is not None:
-            flag = 1
             extraction = extraction.group(0)
             extraction = extraction.strip("-")
             extraction = str(extraction)
@@ -75,6 +74,10 @@ def CheckCapacityOverage(user_input: str = None):
         return_text = json.loads(return_text.content)
         check = (float(return_text["return"]["alberta_internal_load"]) / float(return_text["return"]["total_max_generation_capability"])) * 100
         check = round(check, 2)
+        if float(return_text["return"]["alberta_internal_load"]) >= (float(return_text["return"]["total_max_generation_capability"]) * 0.8):
+            alert_mode_check = True
+        else:
+            alert_mode_check = False
         main_return = discord.Embed(
             colour=discord.Color.gold(),
             title=f"Current Alberta Grid Load Stats",
@@ -82,6 +85,7 @@ def CheckCapacityOverage(user_input: str = None):
             Alberta Current Load Is Using This Percent Of Our Max Capacity: {check}%
             Alberta Current Load: {return_text["return"]["alberta_internal_load"]} Megawatts
             Alberta Current Max Generation Capacity: {return_text["return"]["total_max_generation_capability"]} Megawatts
+            Alert Mode Triggered: {str(alert_mode_check)}
             """,
             type="rich",
             timestamp=dt.datetime.now()
@@ -89,7 +93,7 @@ def CheckCapacityOverage(user_input: str = None):
         if flag == 1:
             Vis.GraphReference(int(return_text["return"]["alberta_internal_load"]),
                                int(return_text["return"]["total_max_generation_capability"]))
-        main_return.set_image(url="attachment://CacheFile.png")
+            main_return.set_image(url="attachment://CacheFile.png")
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
@@ -98,6 +102,7 @@ def CheckCapacityOverage(user_input: str = None):
 
 def AveragePriceBasic(user_input: str):
     flag = 0
+    extraction = None
     if "-" in user_input:
         extraction = re.search(r"\--(.*)", user_input)
         if extraction is not None:
@@ -292,24 +297,24 @@ def GetChannelId(user_input: str, client: discord.Client):
 def GetCams(user_input: str):
     try:
         if len(user_input.split()) < 3:
-                main_return = discord.Embed(
-                    colour = 0x00eaff,
-                    title = f"511 Alberta",
-                    description = dedent('''
-                    You need to provide a search term. 
-                    Please ensure this is wrapped in double quotes (").
-                    Example: `!CrossJoin cams "Nose Hill Drive NW"`.
-                    '''),
-                    type = "rich",
-                    timestamp = dt.datetime.now()
-                )
+            main_return = discord.Embed(
+                colour=0x00eaff,
+                title=f"511 Alberta",
+                description=dedent('''
+                                You need to provide a search term. 
+                                Please ensure this is wrapped in double quotes (").
+                                Example: `!CrossJoin cams "Nose Hill Drive NW"`.
+                                '''),
+                type="rich",
+                timestamp=dt.datetime.now()
+            )
         else:
             userSearch = user_input.split('"')[1]
             userSplitWSearch = shlex.split(user_input)
             headers = {
                 "content-type": "application/json"
             }
-            return_text = r.get (
+            return_text = r.get(
                 "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
                 headers=headers
             )
@@ -337,21 +342,21 @@ def GetCams(user_input: str):
                         -# This location has {len(x['Views'])} camera(s). 
                         -# Specify a specific camera with `!CrossJoin cams [1-{len(x['Views'])}]`.
                         """),
-                        type = "rich",
-                        timestamp = dt.datetime.now()
+                        type="rich",
+                        timestamp=dt.datetime.now()
                     )
                     main_return.set_image(url = x['Views'][cameraNum]["Url"].replace(" ", "%20") + f"?t={t}")
                     break
                 i += 1
             else:
                 main_return = discord.Embed(
-                    colour = 0x00eaff,
-                    title = f"511 Alberta > {userSearch}",
-                    description = dedent("""
+                    colour=0x00eaff,
+                    title=f"511 Alberta > {userSearch}",
+                    description=dedent("""
                     The search yielded no results.
                     """),
-                    type = "rich",
-                    timestamp = dt.datetime.now()
+                    type="rich",
+                    timestamp=dt.datetime.now()
                 )
         return main_return
     except Exception as e:
@@ -359,7 +364,19 @@ def GetCams(user_input: str):
         return Sys.ErrorMessage_Command(str(e))
 
 
-def SendHelp(user_input: str):
+def GetRoadConditions(user_input: str = None):
+    headers = {
+        "content-type": "application/json"
+    }
+    return_text = r.get(
+        "https://511.alberta.ca/api/v2/get/winterroads?format=json&lang=en",
+        headers=headers
+    )
+    return_text = json.loads(return_text.content)
+    print(return_text)
+
+
+def SendHelp(user_input: str = None):
     try:
         cmdPrefix = "!CrossJoin"
         main_return = discord.Embed(
@@ -382,3 +399,8 @@ def SendHelp(user_input: str):
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
         return Sys.ErrorMessage_Command(str(e))
+
+
+# Here as a skeleton for future implementation
+def AlertMode():
+    print("Skeleton For Now")
