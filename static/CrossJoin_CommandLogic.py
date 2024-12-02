@@ -369,7 +369,7 @@ def GetRoadConditions(user_input: str = None):
         "content-type": "application/json"
     }
     return_text = r.get(
-        "https://511.alberta.ca/api/v2/get/winterroads",
+        "https://511.alberta.ca/api/v2/get/winterroads?format=json&lang=en",
         headers=headers
     )
     return_text = json.loads(return_text.content)
