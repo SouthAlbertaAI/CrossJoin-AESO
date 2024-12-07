@@ -82,10 +82,22 @@ class CrossJoin(discord.Client):
                 self.alert_mode = True
             await sender.send(embed=Output)
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(minutes=10)
     async def alert_mode_on(self):
-        print("Skeleton For Now")
+        if self.alert_mode is True and self.channel_main is not None:
+            sender = self.get_channel(self.channel_main)
+            Output = Support.HotInfer("check-safe")
+            Output.description += "\nNotice: This Is An Alert Mode Run"
+            if "Alert Mode Triggered: True" in Output.description:
+                self.alert_mode = True
+            elif "Alert Mode Triggered: False" in Output.description:
+                self.alert_mode = False
+            await sender.send(embed=Output)
 
     @scheduled_capacity_check.before_loop
     async def before_scheduled_capacity_check(self):
+        await self.wait_until_ready()
+
+    @alert_mode_on.before_loop
+    async def before_alert_mode_on(self):
         await self.wait_until_ready()

@@ -265,7 +265,7 @@ def SourcesBasic(user_input: str = None):
             data_main.append(solar_overtime)
             data_main.append(wind_overtime)
 
-            Vis.GraphSources("Power Producing Assets", "Power Produced By Asset",
+            Vis.GraphSources("Power Producing Assets", "Power Produced(Megawatts)",
                              data_main, data_main_2)
             main_return.set_image(url="attachment://CacheFile.png")
         return main_return
@@ -333,9 +333,9 @@ def GetCams(user_input: str):
                     else:
                         cameraNum = int(userSplitWSearch[3]) - 1
                     main_return = discord.Embed(
-                        colour = 0x00eaff,
-                        title = f"511 Alberta > {x['Location']}",
-                        description = dedent(f"""
+                        colour=0x00eaff,
+                        title=f"511 Alberta > {x['Location']}",
+                        description=dedent(f"""
                         {x['Views'][cameraNum]['Description']}.
                         - Direction: {x['Direction']}.
                         - Position: {x['Latitude']}, {x['Longitude']}.
@@ -345,7 +345,7 @@ def GetCams(user_input: str):
                         type="rich",
                         timestamp=dt.datetime.now()
                     )
-                    main_return.set_image(url = x['Views'][cameraNum]["Url"].replace(" ", "%20") + f"?t={t}")
+                    main_return.set_image(url=x['Views'][cameraNum]["Url"].replace(" ", "%20") + f"?t={t}")
                     break
                 i += 1
             else:
@@ -365,6 +365,15 @@ def GetCams(user_input: str):
 
 
 def GetRoadConditions(user_input: str = None):
+    extraction = "Calgary"
+    if "--" in user_input:
+        extraction = re.search(r"\--(.*)", user_input)
+        if extraction is not None:
+            extraction = extraction.group(1)
+            extraction = extraction.strip("-")
+            extraction = str(extraction)
+            if extraction == "":
+                extraction = "Calgary"
     headers = {
         "content-type": "application/json"
     }
@@ -373,7 +382,46 @@ def GetRoadConditions(user_input: str = None):
         headers=headers
     )
     return_text = json.loads(return_text.content)
-    print(return_text)
+    VisibilityMain = []
+    RoadConditionsMain = []
+    RoadConditionsSecondary = []
+    for z in return_text:
+        try:
+            if extraction in z["LocationDescription"]:
+                RoadConditionsMain.append(z["Primary Condition"])
+                VisibilityMain.append(z["Visibility"])
+                for k in z["Secondary Conditions"]:
+                    RoadConditionsSecondary.append(k)
+        except Exception as e:
+            log.info(f"Attempt To Access Road Condition Record Failed. Reason {e}")
+
+    main_return = discord.Embed(
+        colour=discord.Colour.gold(),
+        title=f"Road Reports For The {extraction} Area",
+        description=f"""
+            **Main Conditions**
+            The Main reported road conditions in {extraction} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
+            Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
+            
+            
+            **Secondary Conditions**
+            """,
+        type="rich",
+        timestamp=dt.datetime.now()
+    )
+
+    if len(RoadConditionsSecondary) > 0:
+        ElementPassOne = RoadConditionsSecondary[0]
+        main_return.description += f"""Secondary road conditions have also been reported as follows:
+                - {ElementPassOne}\n
+                """
+        if len(RoadConditionsSecondary) > 1:
+            ElementPassTwo = RoadConditionsSecondary[1]
+            main_return.description += f"- {ElementPassTwo}"
+    else:
+        main_return.description += "There is no notable secondary road conditions to note."
+
+    return main_return
 
 
 def SendHelp(user_input: str = None):
@@ -404,3 +452,6 @@ def SendHelp(user_input: str = None):
 # Here as a skeleton for future implementation
 def AlertMode():
     print("Skeleton For Now")
+
+
+GetRoadConditions("!CrossJoin roads")

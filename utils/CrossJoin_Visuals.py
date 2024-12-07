@@ -47,7 +47,7 @@ def GraphSources(XAxisName: str, YAxisName: str, Data: list, Data2: list):
         Count += 1
     plt.xlabel(XAxisName)
     plt.ylabel(YAxisName)
-    plt.legend(loc="upper right")
+    plt.legend(loc="upper right", title="Power Types")
     plt.savefig("CacheFile.png")
     return Image.open("CacheFile.png").tobytes()
 

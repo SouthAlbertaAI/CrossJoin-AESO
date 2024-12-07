@@ -68,6 +68,9 @@ def HotInfer(user_input: str, client: discord.Client = None):
         case "help":
             Log.info("Help command triggered")
             return CommandLogic.SendHelp(user_input)
+        case "roads":
+            Log.info("Roads command triggered")
+            return CommandLogic.GetRoadConditions(user_input)
         case _:
             Log.info(f"Invalid command sent ({user_input}).")
             return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")
