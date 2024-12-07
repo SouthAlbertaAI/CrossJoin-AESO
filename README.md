@@ -9,13 +9,13 @@ This is my first experience using both the discord.py library to make a basic di
 - To view help, type `!CrossJoin help`.
 
 ### Future Additions:
-- [ ] Add in graph and chart visualizations.
+- [x] Add in graph and chart visualizations.
 - [ ] Switch to using the discord `/` command notation.
 - [ ] Cleanup and refinement of some parts of the system.
 - [ ] Integrate road reports into the bot if possible through their APIs.
   - [ ] 511 Alberta.
     - [x] 511 Cameras.
-    - [ ] 511 Road conditions. 
+    - [x] 511 Road conditions. 
   - [ ] AMA Road Reports.
 
 ### Contributing Guidelines:
