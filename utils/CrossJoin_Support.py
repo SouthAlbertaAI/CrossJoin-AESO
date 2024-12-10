@@ -47,6 +47,8 @@ Log = sl.get_logger()
 # Dispatch
 def HotInfer(user_input: str, client: discord.Client = None):
     match user_input.split()[1].lower():
+        # --------------
+        # MAIN COMMANDS:
         case "average":
             Log.info("Average command triggered")
             return CommandLogic.AveragePriceBasic(user_input)
@@ -65,12 +67,17 @@ def HotInfer(user_input: str, client: discord.Client = None):
         case "cams":
             Log.info("Camera command triggered")
             return CommandLogic.GetCams(user_input)
-        case "help":
-            Log.info("Help command triggered")
-            return CommandLogic.SendHelp(user_input)
         case "roads":
             Log.info("Roads command triggered")
             return CommandLogic.GetRoadConditions(user_input)
+        # --------------------
+        # SUPPORTING COMMANDS:
+        case "ping":
+            Log.info("Ping command triggered")
+            return CommandLogic.UserRequestedPing(user_input)
+        case "help":
+            Log.info("Help command triggered")
+            return CommandLogic.SendHelp(user_input)
         case _:
             Log.info(f"Invalid command sent ({user_input}).")
             return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")
