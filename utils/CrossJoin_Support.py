@@ -65,7 +65,7 @@ def HotInfer(user_input: str, client: Bot, user_context: Any = None):
             return CommandLogic.GetChannelId(user_context, client)
         case "cams":
             Log.info("Camera command triggered")
-            return CommandLogic.GetCams(user_context)
+            return CommandLogic.GetCams(user_context[0], user_context[1])
         case "help":
             Log.info("Help command triggered")
             return CommandLogic.SendHelp(user_context)

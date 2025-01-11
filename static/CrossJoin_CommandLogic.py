@@ -33,6 +33,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
+import datetime
 
 import requests as r
 import datetime as dt
@@ -55,12 +56,7 @@ load_dotenv()
 log = sl.get_logger()
 
 
-# Commands are all managed here
-# @tree.command(
-#     name="test-command",
-#     description="This is a test command."
-# )
-def CheckCapacityOverage(user_input: str):
+def CheckCapacityOverage(user_input: bool):
     try:
         headers = {
             "X-API-Key": os.getenv("AESO_API_KEY"),
@@ -87,7 +83,7 @@ def CheckCapacityOverage(user_input: str):
             type="rich",
             timestamp=dt.datetime.now()
         )
-        if user_input == "visual":
+        if user_input is True:
             Vis.GraphReference(int(return_text["return"]["alberta_internal_load"]),
                                int(return_text["return"]["total_max_generation_capability"]))
             main_return.set_image(url="attachment://CacheFile.png")
@@ -131,7 +127,6 @@ def AveragePriceBasic(days: int = 7):
         return Sys.ErrorMessage_Command(str(e))
 
 
-# @client.command(name="what")
 def CapacityBasic():
     try:
         headers = {
@@ -158,8 +153,7 @@ def CapacityBasic():
         return Sys.ErrorMessage_Command(str(e))
 
 
-# @client.command(name="sources")
-def SourcesBasic(user_input: str = "None"):
+def SourcesBasic(user_input: bool):
     try:
         headers = {
             "X-API-Key": os.getenv("AESO_API_KEY"),
@@ -230,7 +224,7 @@ def SourcesBasic(user_input: str = "None"):
             timestamp=dt.datetime.now()
         )
 
-        if user_input == "visual":
+        if user_input is True:
             data_main.append(gas_overtime)
             data_main.append(stored_overtime)
             data_main.append(other_overtime)
@@ -266,7 +260,7 @@ def GetChannelId(user_input: str, client: discord.Client):
         return Sys.ErrorMessage_Command(str(e))
 
 
-def GetCams(user_input: str):
+def GetCams(user_input: str, cam_specifier: int = 1):
     try:
         headers = {
             "content-type": "application/json"
@@ -280,8 +274,12 @@ def GetCams(user_input: str):
         true_list_dict = {idx: z for idx, z in enumerate(true_list)}
         high_matches = process.extract(user_input, true_list_dict, limit=5)
         usage = return_text[high_matches[0][2]]
-        main_image = usage["Views"][0]["Url"]
-        urllib.request.urlretrieve(main_image, "main_image.png")
+        if len(usage["Views"]) > 1 and cam_specifier <= len(usage["Views"]) - 1:
+            main_image = usage["Views"][cam_specifier]["Url"]
+        else:
+            main_image = usage["Views"][0]["Url"]
+        img_name = "MainImage.png"
+        urllib.request.urlretrieve(main_image, img_name)
         main_return = discord.Embed(
             colour=0x00eaff,
             title=f":red_car: 511 Alberta - {usage['Location']}",
@@ -295,24 +293,14 @@ def GetCams(user_input: str):
             type="rich",
             timestamp=dt.datetime.now()
         )
-        main_return.set_image(url="attachment://main_image.png")
+        main_return.set_image(url="attachment://MainImage.png")
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
         return Sys.ErrorMessage_Command(str(e))
 
 
-# @client.command(name="roads")
-def GetRoadConditions(user_input: str = None):
-    extraction = "Calgary"
-    if "--" in user_input:
-        extraction = re.search(r"\--(.*)", user_input)
-        if extraction is not None:
-            extraction = extraction.group(1)
-            extraction = extraction.strip("-")
-            extraction = str(extraction)
-            if extraction == "":
-                extraction = "Calgary"
+def GetRoadConditions(user_input: str = "No Roads"):
     headers = {
         "content-type": "application/json"
     }
@@ -321,28 +309,28 @@ def GetRoadConditions(user_input: str = None):
         headers=headers
     )
     return_text = json.loads(return_text.content)
+    true_list = [z["AreaName"] for z in return_text]
+    true_list_dict = {idx: z for idx, z in enumerate(true_list)}
+    high_matches = process.extract(user_input, true_list_dict, limit=10)
     VisibilityMain = []
     RoadConditionsMain = []
     RoadConditionsSecondary = []
-    for z in return_text:
-        try:
-            if extraction in z["LocationDescription"]:
-                RoadConditionsMain.append(z["Primary Condition"])
-                VisibilityMain.append(z["Visibility"])
-                for k in z["Secondary Conditions"]:
-                    RoadConditionsSecondary.append(k)
-        except Exception as e:
-            log.info(f"Attempt To Access Road Condition Record Failed. Reason {e}")
+    for z in high_matches:
+        VisibilityMain.append(return_text[z[2]]["Visibility"])
+        RoadConditionsMain.append(return_text[z[2]]["Primary Condition"])
+        for k in return_text[z[2]]["Secondary Conditions"]:
+            RoadConditionsSecondary.append(k)
 
     main_return = discord.Embed(
         colour=discord.Colour.gold(),
-        title=f"Road Reports For The {extraction} Area",
+        title=f"Road Reports For The {user_input} Area",
         description=f"""
             **Main Conditions**
-            The Main reported road conditions in {extraction} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
+            The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
             Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
-            
-            
+
+            -----------------------------------------------
+
             **Secondary Conditions**
             """,
         type="rich",
@@ -363,21 +351,20 @@ def GetRoadConditions(user_input: str = None):
     return main_return
 
 
-# @client.command(name="help")
 def SendHelp(user_input: str = None):
     try:
-        cmdPrefix = "!CrossJoin"
         main_return = discord.Embed(
             colour=discord.Color.gold(),
             title=f"CrossJoin Command Syntax",
             description=dedent(f"""
-            - `{cmdPrefix} average` - Shows the average price over a specified amount of days.
-            - `{cmdPrefix} capacity` - Shows stats about capacity and load of Alberta's power grid.
-            - `{cmdPrefix} sources` - Search a source for information.
-            - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
-            - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
-            - `{cmdPrefix} cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
-            - `{cmdPrefix} help` - Shows this message.
+            - `average` - Shows the average price over a specified amount of days.
+            - `capacity` - Shows stats about capacity and load of Alberta's power grid.
+            - `sources` - Search a source for information.
+            - `check-safe` - Checks grid usage to see if its overcapacity. 
+            - `set-channel` - Sets a specific channel to post updates. 
+            - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
+            - 'roads' - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
+            - `help` - Shows this message.
             -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
             type="rich",
@@ -392,3 +379,6 @@ def SendHelp(user_input: str = None):
 # Here as a skeleton for future implementation
 def AlertMode():
     print("Skeleton For Now")
+
+
+GetCams("Lmao")
