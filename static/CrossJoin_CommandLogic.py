@@ -378,7 +378,4 @@ def SendHelp(user_input: str = None):
 
 # Here as a skeleton for future implementation
 def AlertMode():
-    print("Skeleton For Now")
-
-
-GetCams("Lmao")
+    log.info("Skeleton For Now")
