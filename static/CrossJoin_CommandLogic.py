@@ -384,7 +384,7 @@ def SendHelp(user_input: str = None):
             - `check-safe` - Checks grid usage to see if its overcapacity. 
             - `set-channel` - Sets a specific channel to post updates. 
             - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
-            - 'roads' - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
+            - `roads` - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
             - `help` - Shows this message.
             -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
