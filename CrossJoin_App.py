@@ -199,4 +199,18 @@ async def get_help(interaction: discord.Interaction):
         log.info(f"Error In Get Help Command {e}")
 
 
+@tree.command(
+    name="ping",
+    description="A fun ping command, use for testing if you wish!",
+    nsfw=False
+)
+async def get_ping(interaction: discord.Interaction):
+    try:
+        Response = HotInfer("ping", client)
+        Responder = interaction.response
+        await Responder.send_message(embed=Response)
+    except Exception as e:
+        log.info(f"Error In Get Help Command {e}")
+
+
 client.run(os.getenv("DISCORD_KEY"))

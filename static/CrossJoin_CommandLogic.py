@@ -376,6 +376,25 @@ def SendHelp(user_input: str = None):
         return Sys.ErrorMessage_Command(str(e))
 
 
+def UserRequestedPing():
+    try:
+        main_return = discord.Embed(
+            colour=discord.Color.greyple(),
+            title=f":interrobang: Ping Requested",
+            description=dedent(f"""
+                `PONG!` :incoming_envelope::gear: `PONG!`
+                `PONG!` :incoming_envelope::gear: `PONG!`
+                `PONG!` :incoming_envelope::gear: `PONG!`
+            """),
+            type="rich",
+            timestamp=dt.datetime.now()
+            )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Command(str(e))
+
+
 # Here as a skeleton for future implementation
 def AlertMode():
     log.info("Skeleton For Now")

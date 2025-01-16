@@ -72,6 +72,9 @@ def HotInfer(user_input: str, client: Bot, user_context: Any = None):
         case "roads":
             Log.info("Roads command triggered")
             return CommandLogic.GetRoadConditions(user_context)
+        case "ping":
+            Log.info("Ping command triggered")
+            return CommandLogic.UserRequestedPing()
         case _:
             Log.info(f"Invalid command sent ({user_context}).")
             return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")
