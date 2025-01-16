@@ -33,6 +33,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
+import datetime
 
 import requests as r
 import datetime as dt
@@ -45,6 +46,9 @@ import re
 from dotenv import load_dotenv
 import os
 from textwrap import dedent
+from fuzzywuzzy import process
+from PIL import Image
+import urllib.request
 import shlex # this import is only for unix systems, making it platform dependant. 
 
 
@@ -53,17 +57,7 @@ load_dotenv()
 log = sl.get_logger()
 
 
-# Commands are all managed here
-def CheckCapacityOverage(user_input: str = None):
-    flag = 0
-    if "--" in user_input:
-        extraction = re.search(r"\--(.*)", user_input)
-        if extraction is not None:
-            extraction = extraction.group(0)
-            extraction = extraction.strip("-")
-            extraction = str(extraction)
-            if extraction == "visual":
-                flag = 1
+def CheckCapacityOverage(user_input: bool):
     try:
         headers = {
             "X-API-Key": os.getenv("AESO_API_KEY"),
@@ -90,7 +84,7 @@ def CheckCapacityOverage(user_input: str = None):
             type="rich",
             timestamp=dt.datetime.now()
         )
-        if flag == 1:
+        if user_input is True:
             Vis.GraphReference(int(return_text["return"]["alberta_internal_load"]),
                                int(return_text["return"]["total_max_generation_capability"]))
             main_return.set_image(url="attachment://CacheFile.png")
@@ -100,23 +94,10 @@ def CheckCapacityOverage(user_input: str = None):
         return Sys.ErrorMessage_Command(str(e))
 
 
-def AveragePriceBasic(user_input: str):
-    flag = 0
-    extraction = None
-    if "-" in user_input:
-        extraction = re.search(r"\--(.*)", user_input)
-        if extraction is not None:
-            flag = 1
-            extraction = extraction.group(1)
-            extraction = extraction.strip("-")
-            extraction = str(extraction)
+def AveragePriceBasic(days: int = 7):
     try:
         current_date = dt.date.today()
-        if flag != 1:
-            previous_date_default = current_date - dt.timedelta(days=7)
-        else:
-            previous_date_default = current_date - dt.timedelta(days=int(re.search(r"\d+",
-                                                                                   extraction).group(0)))
+        previous_date_default = current_date - dt.timedelta(days=days)
         headers = {
             "X-API-Key": os.getenv("AESO_API_KEY"),
             "content-type": "application/json"}
@@ -134,13 +115,9 @@ def AveragePriceBasic(user_input: str):
                 log.info(f"Error in data analysis: {e}")
                 price_average_set_days += 0.0
         price_average_set_days = price_average_set_days / true_count
-        if extraction is not None:
-            true_days = extraction
-        else:
-            true_days = 7
         main_return = discord.Embed(
             colour=discord.Color.gold(),
-            title=f":factory::zap: Average Price Over {true_days.split('=')[1]} Days",
+            title=f":factory::zap: Average Price Over {days} Days",
             description=f"**${str(round(price_average_set_days, 2))}**",
             type="rich",
             timestamp=dt.datetime.now()
@@ -177,16 +154,7 @@ def CapacityBasic():
         return Sys.ErrorMessage_Command(str(e))
 
 
-def SourcesBasic(user_input: str = None):
-    flag = 0
-    if "-" in user_input:
-        extraction = re.search(r"\--(.*)", user_input)
-        if extraction is not None:
-            extraction = extraction.group(1)
-            extraction = extraction.strip("-")
-            extraction = str(extraction)
-            if extraction == "visual":
-                flag = 1
+def SourcesBasic(user_input: bool):
     try:
         headers = {
             "X-API-Key": os.getenv("AESO_API_KEY"),
@@ -247,7 +215,7 @@ def SourcesBasic(user_input: str = None):
             timestamp=dt.datetime.now()
         )
 
-        if flag == 1:
+        if user_input is True:
             data_main.append(gas_overtime)
             data_main.append(stored_overtime)
             data_main.append(other_overtime)
@@ -266,13 +234,12 @@ def SourcesBasic(user_input: str = None):
 
 def GetChannelId(user_input: str, client: discord.Client):
     try:
-        extraction = re.search(r"\--(.*)", user_input).group(1)
-        client.channel_main = discord.utils.get(client.get_all_channels(), name=str(extraction)).id
+        client.channel_main = discord.utils.get(client.get_all_channels(), name=user_input).id
         main_return = discord.Embed(
             colour=discord.Color.gold(),
             title=f"You have set the bot channel",
             description=f"""
-            Bot Channel Configured As: #{extraction}
+            Bot Channel Configured As: #{user_input}
             Channel ID: {client.channel_main}
                     """,
             type="rich",
@@ -284,89 +251,47 @@ def GetChannelId(user_input: str, client: discord.Client):
         return Sys.ErrorMessage_Command(str(e))
 
 
-def GetCams(user_input: str):
+def GetCams(user_input: str, cam_specifier: int = 1):
     try:
-        if len(user_input.split()) < 3:
-            main_return = discord.Embed(
-                colour=0x00eaff,
-                title=f":red_car: 511 Alberta",
-                description=dedent('''
-                    You need to provid e a search term. 
-                    Please ensure this is wrapped in double quotes (").
-                    Example: `!CrossJoin cams "6 Avenue / 1 Street SE"`.
-                    '''),
-                type="rich",
-                timestamp=dt.datetime.now()
-            )
+        headers = {
+            "content-type": "application/json"
+        }
+        return_text = r.get(
+            "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
+            headers=headers
+        )
+        return_text = json.loads(return_text.content)
+        true_list = [z["Location"] for z in return_text]
+        true_list_dict = {idx: z for idx, z in enumerate(true_list)}
+        high_matches = process.extract(user_input, true_list_dict, limit=5)
+        usage = return_text[high_matches[0][2]]
+        if len(usage["Views"]) > 1 and cam_specifier <= len(usage["Views"]) - 1:
+            main_image = usage["Views"][cam_specifier]["Url"]
         else:
-            userSearch = user_input.split('"')[1]
-            userSplitWSearch = shlex.split(user_input)
-            headers = {
-                "content-type": "application/json"
-            }
-            return_text = r.get(
-                "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
-                headers=headers
-            )
-            return_text = json.loads(return_text.content)
-            i = 0
-            while i != len(return_text):
-                if userSearch.lower() in return_text[i]["Location"].lower():
-                    x = return_text[i]
-                    t = str(dt.datetime.now())
-                    for i in [':', ' ', '.', '-']:
-                        t = t.replace(i, "")
-                    if len(userSplitWSearch) < 4  or int(userSplitWSearch[3]) < 1:
-                        cameraNum = 0
-                    elif int(userSplitWSearch[3]) > len(x['Views']):
-                        cameraNum = len(x["Views"]) - 1
-                    else:
-                        cameraNum = int(userSplitWSearch[3]) - 1
-                    cameraImg = r.get(x['Views'][cameraNum]["Url"].replace(" ", "%20")).content
-                    with open("CameraOut.jpeg", "wb") as f:
-                        f.write(cameraImg)
-                    main_return = discord.Embed(
-                        colour=0x00eaff,
-                        title=f":red_car: 511 Alberta - {x['Location']}",
-                        description=dedent(f'''
-                            {x["Views"][cameraNum]["Description"]}.
-                            - Direction: {x["Direction"]}.
-                            - Position: {x["Latitude"]}, {x["Longitude"]}.
-                            -# This location has {len(x["Views"])} camera(s). 
-                            -# Specify a specific camera with `!CrossJoin cams "[Location]" [1-{len(x["Views"])}]`.
-                            '''),
-                        type="rich",
-                        timestamp=dt.datetime.now()
-                    )
-                    main_return.set_image(url="attachment://CameraOut.jpeg")
-                    break
-                i += 1
-            else:
-                main_return = discord.Embed(
-                    colour=0x00eaff,
-                    title=f":red_car: 511 Alberta - {userSearch}",
-                    description=dedent("""
-                    The search yielded no results.
-                    """),
-                    type="rich",
-                    timestamp=dt.datetime.now()
-                )
+            main_image = usage["Views"][0]["Url"]
+        img_name = "MainImage.png"
+        urllib.request.urlretrieve(main_image, img_name)
+        main_return = discord.Embed(
+            colour=0x00eaff,
+            title=f":red_car: 511 Alberta - {usage['Location']}",
+            description=dedent(f'''
+                                    {usage["Views"][0]["Description"]}.
+                                    - Direction: {usage["Direction"]}.
+                                    - Position: {usage["Latitude"]}, {usage["Longitude"]}.
+                                    -# This location has {len(usage["Views"])} camera(s). 
+                                    -# Specify a specific camera with `!CrossJoin cams "[Location]" [1-{len(usage["Views"])}]`.
+                                    '''),
+            type="rich",
+            timestamp=dt.datetime.now()
+        )
+        main_return.set_image(url="attachment://MainImage.png")
         return main_return
     except Exception as e:
         log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
         return Sys.ErrorMessage_Command(str(e))
 
 
-def GetRoadConditions(user_input: str = None):
-    extraction = "Calgary"
-    if "--" in user_input:
-        extraction = re.search(r"\--(.*)", user_input)
-        if extraction is not None:
-            extraction = extraction.group(1)
-            extraction = extraction.strip("-")
-            extraction = str(extraction)
-            if extraction == "":
-                extraction = "Calgary"
+def GetRoadConditions(user_input: str = "No Roads"):
     headers = {
         "content-type": "application/json"
     }
@@ -375,20 +300,33 @@ def GetRoadConditions(user_input: str = None):
         headers=headers
     )
     return_text = json.loads(return_text.content)
+    true_list = [z["AreaName"] for z in return_text]
+    true_list_dict = {idx: z for idx, z in enumerate(true_list)}
+    high_matches = process.extract(user_input, true_list_dict, limit=10)
     VisibilityMain = []
     RoadConditionsMain = []
     RoadConditionsSecondary = []
-    roadConditionsSecondaryDescription = ""
-    for z in return_text:
-        try:
-            if extraction in z["LocationDescription"]:
-                RoadConditionsMain.append(z["Primary Condition"])
-                VisibilityMain.append(z["Visibility"])
-                for k in z["Secondary Conditions"]:
-                    RoadConditionsSecondary.append(k)
-        except Exception as e:
-            log.info(f"Attempt To Access Road Condition Record Failed. Reason {e}")
+    for z in high_matches:
+        VisibilityMain.append(return_text[z[2]]["Visibility"])
+        RoadConditionsMain.append(return_text[z[2]]["Primary Condition"])
+        for k in return_text[z[2]]["Secondary Conditions"]:
+            RoadConditionsSecondary.append(k)
 
+    main_return = discord.Embed(
+        colour=discord.Colour.gold(),
+        title=f"Road Reports For The {user_input} Area",
+        description=f"""
+            **Main Conditions**
+            The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
+            Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
+
+            -----------------------------------------------
+
+            **Secondary Conditions**
+            """,
+        type="rich",
+        timestamp=dt.datetime.now()
+    )
     if len(RoadConditionsSecondary) > 0:
         ElementPassOne = RoadConditionsSecondary[0]
         roadConditionsSecondaryDescription += dedent(f"""
@@ -436,20 +374,18 @@ def UserRequestedPing(user_input: str = None):
 
 def SendHelp(user_input: str = None):
     try:
-        cmdPrefix = "!CrossJoin"
         main_return = discord.Embed(
             colour=discord.Color.greyple(),
             title=f":interrobang: CrossJoin Command Syntax",
             description=dedent(f"""
-            - `{cmdPrefix} average` - Shows the average price over a specified amount of days.
-            - `{cmdPrefix} capacity` - Shows stats about capacity and load of Alberta's power grid.
-            - `{cmdPrefix} sources` - Search a source for information.
-            - `{cmdPrefix} check-safe` - Checks grid usage to see if its overcapacity. 
-            - `{cmdPrefix} set-channel` - Sets a specific channel to post updates. 
-            - `{cmdPrefix} cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
-            - `{cmdPrefix} roads` - Get road report from [Alberta 511](https://511.alberta.ca).
-            - `{cmdPrefix} ping` - Ping the bot.
-            - `{cmdPrefix} help` - Shows this message.
+            - `average` - Shows the average price over a specified amount of days.
+            - `capacity` - Shows stats about capacity and load of Alberta's power grid.
+            - `sources` - Search a source for information.
+            - `check-safe` - Checks grid usage to see if its overcapacity. 
+            - `set-channel` - Sets a specific channel to post updates. 
+            - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
+            - 'roads' - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
+            - `help` - Shows this message.
             -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
             """),
             type="rich",
@@ -461,6 +397,25 @@ def SendHelp(user_input: str = None):
         return Sys.ErrorMessage_Command(str(e))
 
 
+def UserRequestedPing():
+    try:
+        main_return = discord.Embed(
+            colour=discord.Color.greyple(),
+            title=f":interrobang: Ping Requested",
+            description=dedent(f"""
+                `PONG!` :incoming_envelope::gear: `PONG!`
+                `PONG!` :incoming_envelope::gear: `PONG!`
+                `PONG!` :incoming_envelope::gear: `PONG!`
+            """),
+            type="rich",
+            timestamp=dt.datetime.now()
+            )
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Command(str(e))
+
+
 # Here as a skeleton for future implementation
 def AlertMode():
-    print("Skeleton For Now")
+    log.info("Skeleton For Now")

@@ -34,10 +34,11 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
-import discord
+from discord.ext.commands import Bot
 import structlog as sl
 from static import CrossJoin_Sys as Sys, CrossJoin_CommandLogic as CommandLogic
 from dotenv import load_dotenv
+from typing import Any
 
 load_dotenv()
 
@@ -45,39 +46,35 @@ Log = sl.get_logger()
 
 
 # Dispatch
-def HotInfer(user_input: str, client: discord.Client = None):
-    match user_input.split()[1].lower():
-        # --------------
-        # MAIN COMMANDS:
+def HotInfer(user_input: str, client: Bot, user_context: Any = None):
+    match user_input:
         case "average":
             Log.info("Average command triggered")
-            return CommandLogic.AveragePriceBasic(user_input)
+            return CommandLogic.AveragePriceBasic(user_context)
         case "capacity":
             Log.info("Capacity command triggered")
             return CommandLogic.CapacityBasic()
         case "sources":
             Log.info("Sources command triggered")
-            return CommandLogic.SourcesBasic(user_input)
+            return CommandLogic.SourcesBasic(user_context)
         case "check-safe":
             Log.info("Check-Safe command triggered")
-            return CommandLogic.CheckCapacityOverage(user_input)
+            return CommandLogic.CheckCapacityOverage(user_context)
         case "set-channel":
             Log.info("Set-Channel command triggered")
-            return CommandLogic.GetChannelId(user_input, client)
+            return CommandLogic.GetChannelId(user_context, client)
         case "cams":
             Log.info("Camera command triggered")
-            return CommandLogic.GetCams(user_input)
-        case "roads":
-            Log.info("Roads command triggered")
-            return CommandLogic.GetRoadConditions(user_input)
-        # --------------------
-        # SUPPORTING COMMANDS:
-        case "ping":
-            Log.info("Ping command triggered")
-            return CommandLogic.UserRequestedPing(user_input)
+            return CommandLogic.GetCams(user_context[0], user_context[1])
         case "help":
             Log.info("Help command triggered")
-            return CommandLogic.SendHelp(user_input)
+            return CommandLogic.SendHelp(user_context)
+        case "roads":
+            Log.info("Roads command triggered")
+            return CommandLogic.GetRoadConditions(user_context)
+        case "ping":
+            Log.info("Ping command triggered")
+            return CommandLogic.UserRequestedPing()
         case _:
-            Log.info(f"Invalid command sent ({user_input}).")
+            Log.info(f"Invalid command sent ({user_context}).")
             return Sys.ErrorMessage_Command("Not A Command.\nYou can find the command list with `!CrossJoin help`.")

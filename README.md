@@ -10,13 +10,13 @@ This is my first experience using both the discord.py library to make a basic di
 
 ### Future Additions:
 - [x] Add in graph and chart visualizations.
-- [ ] Switch to using the discord `/` command notation.
+- [x] Switch to using the discord `/` command notation.
 - [ ] Cleanup and refinement of some parts of the system.
-- [ ] Integrate road reports into the bot if possible through their APIs.
+- [ ] Cleanup UI, further integrate into discords modern bot UI standards.
+- [x] Integrate road reports into the bot if possible through their APIs.
   - [x] 511 Alberta.
     - [x] 511 Cameras.
-    - [x] 511 Road conditions. 
-  - [ ] AMA Road Reports.
+    - [x] 511 Road conditions.
 
 ### Contributing Guidelines:
 Step 1: Check to see if something you would like to add already has a feature branch. If it does then go and get involved in the conversation there to see if your ideas can be implemented.</br>

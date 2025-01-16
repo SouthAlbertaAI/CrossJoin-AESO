@@ -36,63 +36,59 @@ POSSIBILITY OF SUCH DAMAGE.
 
 import discord
 from discord.ext import tasks
-import utils.CrossJoin_Support as Support
-from static import CrossJoin_Sys as Sys
+from discord.ext import commands
+import structlog as sl
 
 
 # Discord bot itself
-class CrossJoin(discord.Client):
+class CrossJoin(discord.ext.commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.logger = sl.get_logger()
         self.channel_main = None
         self.alert_mode = False
 
     async def setup_hook(self) -> None:
         self.scheduled_capacity_check.start()
 
+    async def setup_alert_mode(self) -> None:
+        self.alert_mode_on.start()
+
     async def on_ready(self):
-        print(f"Logged On As {self.user} with ID {self.user.id}")
-        print("------------------------------------------------------")
+        await self.tree.sync()
+        self.logger.info(f"Logged On As {self.user} with ID {self.user.id}")
+        self.logger.info("------------------------------------------------------")
 
     async def on_message(self, message: discord.Message):
         if message.author.id == self.user.id:
             return
 
-        if message.content.startswith("!CrossJoin"):
-            try:
-                Response = Support.HotInfer(message.content, self)
-                if Response.image.url is not None and Response.image.url.split(":")[0] == "attachment":
-                    await message.reply(mention_author=True, embed=Response,
-                                        file=discord.File(Response.image.url.strip("attachment://")))
-                else:
-                    await message.reply(mention_author=True, embed=Response)
-            except Exception as e:
-                print(e)
-                await message.reply(embed=Sys.ErrorMessage_Command("Fatal Error Occurred"),
-                                    mention_author=True)
-
+    # These are skeletons until they can be refactored for the new command system
     @tasks.loop(hours=2)
     async def scheduled_capacity_check(self):
-        if self.channel_main is not None:
-            sender = self.get_channel(self.channel_main)
-            Output = Support.HotInfer("check-safe")
-            Output.description += "\nNotice: This Is A Scheduled Run"
-            # Check to see if alert mode should be triggered
-            if "Alert Mode Triggered: True" in Output.description:
-                self.alert_mode = True
-            await sender.send(embed=Output)
+        self.logger.info("Skeleton For Now")
+        # if self.channel_main is not None:
+        #     sender = self.get_channel(self.channel_main)
+        #     Output = Support.HotInfer("check-safe", self)
+        #     Output.description += "\nNotice: This Is A Scheduled Run"
+        #     # Check to see if alert mode should be triggered
+        #     if "Alert Mode Triggered: True" in Output.description:
+        #         self.alert_mode = True
+        #     await sender.send(embed=Output)
 
+    # These are skeletons until they can be refactored for the new command system
     @tasks.loop(minutes=10)
     async def alert_mode_on(self):
-        if self.alert_mode is True and self.channel_main is not None:
-            sender = self.get_channel(self.channel_main)
-            Output = Support.HotInfer("check-safe")
-            Output.description += "\nNotice: This Is An Alert Mode Run"
-            if "Alert Mode Triggered: True" in Output.description:
-                self.alert_mode = True
-            elif "Alert Mode Triggered: False" in Output.description:
-                self.alert_mode = False
-            await sender.send(embed=Output)
+        self.logger.info("Skeleton For Now")
+        # if self.alert_mode is True and self.channel_main is not None:
+        #     sender = self.get_channel(self.channel_main)
+        #     Output = Support.HotInfer("check-safe", self)
+        #     Output.description += "\nNotice: This Is An Alert Mode Run"
+        #     if "Alert Mode Triggered: True" in Output.description:
+        #         self.alert_mode = True
+        #     elif "Alert Mode Triggered: False" in Output.description:
+        #         self.alert_mode = False
+        #     await sender.send(embed=Output)
 
     @scheduled_capacity_check.before_loop
     async def before_scheduled_capacity_check(self):
