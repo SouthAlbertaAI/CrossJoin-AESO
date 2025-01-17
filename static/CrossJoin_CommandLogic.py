@@ -327,31 +327,18 @@ def GetRoadConditions(user_input: str = "No Roads"):
         type="rich",
         timestamp=dt.datetime.now()
     )
+
     if len(RoadConditionsSecondary) > 0:
         ElementPassOne = RoadConditionsSecondary[0]
-        roadConditionsSecondaryDescription += dedent(f"""
-            Secondary road conditions have also been reported as follows:
-            - {ElementPassOne}
-        """)
+        main_return.description += f"""Secondary road conditions have also been reported as follows:
+                - {ElementPassOne}\n
+                """
         if len(RoadConditionsSecondary) > 1:
             ElementPassTwo = RoadConditionsSecondary[1]
-            roadConditionsSecondaryDescription += f"- {ElementPassTwo}"
+            main_return.description += f"- {ElementPassTwo}"
     else:
-        roadConditionsSecondaryDescription += "There is no notable secondary road conditions to note."
-    
-    main_return = discord.Embed(
-        colour=0x00eaff,
-        title=f":red_car: 511 Alberta - Road Reports For The {extraction} Area",
-        description=dedent(f"""
-            **Main Conditions:**
-            - The Main reported road conditions in {extraction} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}
-            - Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
-            **Secondary Conditions:**
-            {roadConditionsSecondaryDescription}
-            """),
-        type="rich",
-        timestamp=dt.datetime.now()
-    )
+        main_return.description += "There is no notable secondary road conditions to note."
+
     return main_return
 
 def UserRequestedPing(user_input: str = None):
