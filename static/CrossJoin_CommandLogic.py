@@ -291,55 +291,48 @@ def GetCams(user_input: str, cam_specifier: int = 1):
         return Sys.ErrorMessage_Command(str(e))
 
 
-def GetRoadConditions(user_input: str = "No Roads"):
-    headers = {
-        "content-type": "application/json"
-    }
-    return_text = r.get(
-        "https://511.alberta.ca/api/v2/get/winterroads?format=json&lang=en",
-        headers=headers
-    )
-    return_text = json.loads(return_text.content)
-    true_list = [z["AreaName"] for z in return_text]
-    true_list_dict = {idx: z for idx, z in enumerate(true_list)}
-    high_matches = process.extract(user_input, true_list_dict, limit=10)
-    VisibilityMain = []
-    RoadConditionsMain = []
-    RoadConditionsSecondary = []
-    for z in high_matches:
-        VisibilityMain.append(return_text[z[2]]["Visibility"])
-        RoadConditionsMain.append(return_text[z[2]]["Primary Condition"])
-        for k in return_text[z[2]]["Secondary Conditions"]:
-            RoadConditionsSecondary.append(k)
-
-    main_return = discord.Embed(
-        colour=discord.Colour.gold(),
-        title=f"Road Reports For The {user_input} Area",
-        description=f"""
-            **Main Conditions**
-            The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
-            Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
-
-            -----------------------------------------------
-
-            **Secondary Conditions**
-            """,
-        type="rich",
-        timestamp=dt.datetime.now()
-    )
-
-    if len(RoadConditionsSecondary) > 0:
-        ElementPassOne = RoadConditionsSecondary[0]
-        main_return.description += f"""Secondary road conditions have also been reported as follows:
-                - {ElementPassOne}\n
-                """
-        if len(RoadConditionsSecondary) > 1:
-            ElementPassTwo = RoadConditionsSecondary[1]
-            main_return.description += f"- {ElementPassTwo}"
-    else:
-        main_return.description += "There is no notable secondary road conditions to note."
-
-    return main_return
+def GetCams(user_input: str, cam_specifier: int = 1):
+    try:
+        headers = {
+            "content-type": "application/json"
+        }
+        return_text = r.get(
+            "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
+            headers=headers
+        )
+        return_text = json.loads(return_text.content)
+        true_list = [z["Location"] for z in return_text]
+        true_list_dict = {idx: z for idx, z in enumerate(true_list)}
+        high_matches = process.extract(user_input, true_list_dict, limit=5)
+        usage = return_text[high_matches[0][2]]
+        cam_specifier -= 1
+        comparison = usage["Views"]
+        comparison = int(len(comparison))
+        if 0 <= cam_specifier <= (comparison - 1):
+            main_image = usage["Views"][cam_specifier]["Url"]
+        else:
+            main_image = usage["Views"][0]["Url"]
+        img_name = "MainImage.png"
+        urllib.request.urlretrieve(main_image, img_name)
+        main_return = discord.Embed(
+            colour=0x00eaff,
+            title=f":red_car: 511 Alberta - {usage['Location']}",
+            description=dedent(f'''
+                                    {usage["Views"][0]["Description"]}.
+                                    - Direction: {usage["Direction"]}.
+                                    - Position: {usage["Latitude"]}, {usage["Longitude"]}.
+                                    -# This location has {len(usage["Views"])} camera(s). 
+                                    -# Specify a specific camera with `!CrossJoin cams "[Location]" [1-{len(usage["Views"])}]`.
+                                    '''),
+            type="rich",
+            timestamp=dt.datetime.now()
+        )
+        main_return.set_image(url="attachment://MainImage.png")
+        return main_return
+    except Exception as e:
+        log.info(f"Error: Basic CrossJoin Run Failed. Reason: {e}")
+        return Sys.ErrorMessage_Command(str(e))
+        
 
 def UserRequestedPing(user_input: str = None):
     try:
