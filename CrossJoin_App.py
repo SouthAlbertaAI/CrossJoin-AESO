@@ -210,7 +210,7 @@ async def get_ping(interaction: discord.Interaction):
         Responder = interaction.response
         await Responder.send_message(embed=Response)
     except Exception as e:
-        log.info(f"Error In Get Help Command {e}")
+        log.info(f"Error In Ping Command {e}")
 
 
 client.run(os.getenv("DISCORD_KEY"))
