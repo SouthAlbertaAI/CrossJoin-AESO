@@ -68,7 +68,7 @@ def HotInfer(user_input: str, client: Bot, user_context: Any = None):
             return CommandLogic.GetCams(user_context[0], user_context[1])
         case "help":
             Log.info("Help command triggered")
-            return CommandLogic.SendHelp(user_context)
+            return CommandLogic.SendHelp()
         case "roads":
             Log.info("Roads command triggered")
             return CommandLogic.GetRoadConditions(user_context)
