@@ -72,10 +72,10 @@ def CheckCapacityOverage(user_input: bool):
             colour=discord.Color.gold(),
             title=f":factory::zap: Current Alberta Grid Load Stats",
             description=dedent(f"""
-            Alberta Current Load Is Using This Percent Of Our Max Capacity: {check}%
-            Alberta Current Load: {return_text["return"]["alberta_internal_load"]} Megawatts
-            Alberta Current Max Generation Capacity: {return_text["return"]["total_max_generation_capability"]} Megawatts
-            Alert Mode Triggered: {str(alert_mode_check)}
+            - Alberta Current Load Is Using This Percent Of Our Max Capacity: {check}%
+            - Alberta Current Load: {return_text["return"]["alberta_internal_load"]} Megawatts
+            - Alberta Current Max Generation Capacity: {return_text["return"]["total_max_generation_capability"]} Megawatts
+            - Alert Mode Triggered: {str(alert_mode_check)}
             """),
             type="rich",
             timestamp=dt.datetime.now()
@@ -137,9 +137,9 @@ def CapacityBasic():
             colour=discord.Color.gold(),
             title=f":factory::zap: Current Alberta Grid Load Stats",
             description=dedent(f"""
-            Alberta Current Power Usage(Megawatts): {return_text["return"]["alberta_internal_load"]}\n\n
-            Alberta Current Power Generated(Megawatts): {return_text["return"]["total_net_generation"]}\n\n
-            Alberta Max Generation Capacity(Megawatts): {return_text["return"]["total_max_generation_capability"]}\n\n
+            - Alberta Current Power Usage(Megawatts): {return_text["return"]["alberta_internal_load"]}
+            - Alberta Current Power Generated(Megawatts): {return_text["return"]["total_net_generation"]}
+            - Alberta Max Generation Capacity(Megawatts): {return_text["return"]["total_max_generation_capability"]}
             """),
             type="rich",
             timestamp=dt.datetime.now()
@@ -204,12 +204,12 @@ def SourcesBasic(user_input: bool):
             colour=discord.Color.gold(),
             title=f":factory::zap: Current Alberta Power Types Usage (Over 5 Megawatts)",
             description=dedent(f"""
-            Gas Currently Used: {gas_true} Megawatts\n\n
-            Other Fuel Types Currently Used: {other_true} Megawatts\n\n
-            Stored Fuel Types Currently Used: {stored_true} Megawatts\n\n
-            Hydro Fuel Types Currently Used: {hydro_true} Megawatts\n\n
-            Solar Fuel Types Currently Used: {solar_true} Megawatts\n\n
-            Wind Fuel Types Currently Used: {wind_true} Megawatts\n\n
+            - Gas Currently Used: {gas_true} Megawatts
+            - Other Fuel Types Currently Used: {other_true} Megawatts
+            - Stored Fuel Types Currently Used: {stored_true} Megawatts
+            - Hydro Fuel Types Currently Used: {hydro_true} Megawatts
+            - Solar Fuel Types Currently Used: {solar_true} Megawatts
+            - Wind Fuel Types Currently Used: {wind_true} Megawatts
             """),
             type="rich",
             timestamp=dt.datetime.now()
@@ -223,7 +223,7 @@ def SourcesBasic(user_input: bool):
             data_main.append(solar_overtime)
             data_main.append(wind_overtime)
 
-            Vis.GraphSources("Power Producing Assets", "Power Produced(Megawatts)",
+            Vis.GraphSources("Power Producing Assets", "Power Produced (Megawatts)",
                              data_main, data_main_2)
             main_return.set_image(url="attachment://CacheFile.png")
         return main_return
@@ -316,14 +316,12 @@ def GetRoadConditions(user_input: str = "No Roads"):
             RoadConditionsSecondary.append(k)
 
     main_return = discord.Embed(
-        colour=discord.Colour.gold(),
+        colour=0x00eaff,
         title=f":red_car: Road Reports For The {user_input} Area",
         description=f"""
             **Main Conditions**
-            The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}\n
-            Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
-
-            -----------------------------------------------
+            - The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}
+            - Road visibility is reported as: {max(VisibilityMain, key=VisibilityMain.count)}
 
             **Secondary Conditions**
             """,
@@ -333,9 +331,7 @@ def GetRoadConditions(user_input: str = "No Roads"):
 
     if len(RoadConditionsSecondary) > 0:
         ElementPassOne = RoadConditionsSecondary[0]
-        main_return.description += f"""Secondary road conditions have also been reported as follows:
-                - {ElementPassOne}\n
-                """
+        main_return.description += f"""- {ElementPassOne}"""
         if len(RoadConditionsSecondary) > 1:
             ElementPassTwo = RoadConditionsSecondary[1]
             main_return.description += f"- {ElementPassTwo}"
@@ -359,7 +355,7 @@ def SendHelp():
             - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
             - `roads` - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
             - `help` - Shows this message.
-            -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and [contributors](https://github.com/SouthAlbertaAI/CrossJoin-AESO/graphs/contributors).
+            -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and contributors.
             """),
             type="rich",
             timestamp=dt.datetime.now()
