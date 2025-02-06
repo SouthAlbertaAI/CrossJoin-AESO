@@ -114,7 +114,7 @@ def AveragePriceBasic(days: int = 7):
         main_return = discord.Embed(
             colour=discord.Color.gold(),
             title=f":factory::zap: Average Price Over {days} Days",
-            description=str(round(price_average_set_days, 2)),
+            description="$" + str(round(price_average_set_days, 2)),
             type="rich",
             timestamp=dt.datetime.now()
         )
