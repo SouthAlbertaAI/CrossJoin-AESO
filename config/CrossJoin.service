@@ -1,10 +1,5 @@
 
 # SYSTEMD UNIT FILE FOR CROSSJOIN.
-# ---
-# Place or link this file in /etc/systemd/system/
-# ---
-# If you are using venv, make sure to change the python
-# executable location in ExecStart.
 
 [Unit]
 Description=CrossJoin Discord Bot (Python)

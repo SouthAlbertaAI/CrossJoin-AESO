@@ -257,7 +257,7 @@ def GetCams(user_input: str, cam_specifier: int = 1):
             "content-type": "application/json"
         }
         return_text = r.get(
-            "https://511.alberta.ca/api/v2/get/cameras?format=json&lang=en",
+            f"https://511.alberta.ca/api/v2/get/cameras?key={os.getenv('AB_511_KEY')}&format=json&lang=en",
             headers=headers
         )
         return_text = json.loads(return_text.content)
@@ -278,12 +278,12 @@ def GetCams(user_input: str, cam_specifier: int = 1):
             colour=0x00eaff,
             title=f":red_car: 511 Alberta - {usage['Location']}",
             description=dedent(f'''
-                                    {usage["Views"][0]["Description"]}.
-                                    - Direction: {usage["Direction"]}.
-                                    - Position: {usage["Latitude"]}, {usage["Longitude"]}.
-                                    -# This location has {len(usage["Views"])} camera(s). 
-                                    -# Specify a specific camera with `!CrossJoin cams "[Location]" [1-{len(usage["Views"])}]`.
-                                    '''),
+                {usage["Views"][0]["Description"]}.
+                - Direction: {usage["Direction"]}.
+                - Position: {usage["Latitude"]}, {usage["Longitude"]}.
+                -# This location has {len(usage["Views"])} camera(s). 
+                -# Specify a specific camera with `!CrossJoin cams "[Location]" [1-{len(usage["Views"])}]`.
+            '''),
             type="rich",
             timestamp=dt.datetime.now()
         )
@@ -299,7 +299,7 @@ def GetRoadConditions(user_input: str = "No Roads"):
         "content-type": "application/json"
     }
     return_text = r.get(
-        "https://511.alberta.ca/api/v2/get/winterroads?format=json&lang=en",
+        f"https://511.alberta.ca/api/v2/get/winterroads?key={os.getenv('AB_511_KEY')}&format=json&lang=en",
         headers=headers
     )
     return_text = json.loads(return_text.content)
@@ -317,7 +317,7 @@ def GetRoadConditions(user_input: str = "No Roads"):
 
     main_return = discord.Embed(
         colour=0x00eaff,
-        title=f":red_car: Road Reports For The {user_input} Area",
+        title=f":red_car: 511 Alberta - Road Reports For The {user_input} Area",
         description=f"""
             **Main Conditions**
             - The Main reported road conditions in {user_input} are: {max(RoadConditionsMain, key=RoadConditionsMain.count)}
@@ -347,15 +347,15 @@ def SendHelp():
             colour=discord.Color.greyple(),
             title=f":interrobang: CrossJoin Command Syntax",
             description=dedent(f"""
-            - `average` - Shows the average price over a specified amount of days.
-            - `capacity` - Shows stats about capacity and load of Alberta's power grid.
-            - `sources` - Search a source for information.
-            - `check-safe` - Checks grid usage to see if its overcapacity. 
-            - `set-channel` - Sets a specific channel to post updates. 
-            - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
-            - `roads` - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
-            - `help` - Shows this message.
-            -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and contributors.
+                - `average` - Shows the average price over a specified amount of days.
+                - `capacity` - Shows stats about capacity and load of Alberta's power grid.
+                - `sources` - Search a source for information.
+                - `check-safe` - Checks grid usage to see if its overcapacity. 
+                - `set-channel` - Sets a specific channel to post updates. 
+                - `cams` - Gets cameras from [Alberta 511](https://511.alberta.ca).
+                - `roads` - Gets current road conditions as reported from [Alberta 511](https://511.alberta.ca).
+                - `help` - Shows this message.
+                -# Built by [SouthAlbertaAI](https://github.com/SouthAlbertaAI) and contributors.
             """),
             type="rich",
             timestamp=dt.datetime.now()
